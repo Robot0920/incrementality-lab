@@ -1,0 +1,26 @@
+# data never goes in git — it lives only inside the Codespace
+data/
+*.duckdb
+*.duckdb.wal
+*.csv
+*.csv.gz
+*.parquet
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+.ruff_cache/
+.pytest_cache/
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+logs/
+
+# editor / os
+.DS_Store
+.vscode/settings.json

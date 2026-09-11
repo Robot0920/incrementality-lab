@@ -1,0 +1,15 @@
+# Core analysis stack for Pod 0 (ingestion + profiling).
+# dbt is installed later from requirements-dbt.txt so a version conflict
+# can never break your first run.
+duckdb>=1.1
+pandas>=2.2
+pyarrow>=16
+numpy>=1.26
+scipy>=1.13
+statsmodels>=0.14
+matplotlib>=3.8
+tabulate>=0.9
+requests>=2.32
+tqdm>=4.66
+jupyter>=1.1
+ipykernel>=6.29
