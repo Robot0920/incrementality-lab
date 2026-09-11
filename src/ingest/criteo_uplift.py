@@ -30,7 +30,9 @@ from src.config import RAW_DIR, ensure_dirs
 from src.db import connect
 
 SOURCE_URL = "https://go.criteo.net/criteo-research-uplift-v2.1.csv.gz"
-RAW_FILE = RAW_DIR / "criteo_uplift_v2.1.csv.gz"
+# Keep the filename identical to the URL's basename, so a file you downloaded in a
+# browser can simply be dropped into data/raw/ and will be picked up as-is.
+RAW_FILE = RAW_DIR / SOURCE_URL.rsplit("/", 1)[-1]
 TABLE = "bronze.criteo_uplift"
 
 # Published figures we assert against, so a silently truncated download
