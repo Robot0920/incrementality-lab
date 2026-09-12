@@ -6,11 +6,14 @@ It is one of the very few PUBLIC logs of a real large-scale randomized experimen
 13,979,592 users, randomly assigned to `treatment` (ad campaign on) or control,
 with 12 anonymized features plus three outcome columns.
 
-The column that makes it special is `exposure`: being *assigned* to treatment is
-not the same as actually *seeing* the ad. 被分到实验组 != 真的被曝光。
-That gap is exactly our product's hardest measurement problem — an artist turning
-Discovery Mode on is not the same as the algorithm actually promoting them — and
-it is what separates ITT from LATE.
+The column that makes it special is `exposure`: being *assigned* to treatment is not the
+same as actually *seeing* the ad. That gap is our product's hardest measurement problem —
+an artist turning Amplify on is not the same as the algorithm actually promoting them —
+and it is exactly what separates ITT from LATE.
+
+Caveat recorded in docs/02_data_dictionary.md: the authors sub-sampled non-uniformly to
+hide the true incrementality levels, so the METHODS here transfer but the effect
+magnitudes are not real-world business numbers.
 
 Run:
     python -m src.ingest.criteo_uplift            # download (once) + load to bronze
@@ -70,11 +73,11 @@ def download(force: bool = False) -> None:
 
 
 def load_bronze() -> int:
-    """Load the raw CSV into bronze, unmodified except for a load timestamp.
+    """Load the raw CSV into bronze, unmodified except for lineage columns.
 
-    Bronze 的铁律 (the one rule of bronze): 除了加载元数据, 不做任何转换。
-    你一旦在 bronze 就开始清洗, 就永远无法回答 "原始数据到底长什么样" ——
-    而 RCA 的第一步恰恰是这个问题。
+    The one rule of bronze: no transformation beyond load metadata. Start cleaning here
+    and you permanently lose the ability to answer "what did the source actually send?"
+    — which is step 1 of every root cause analysis.
     """
     con = connect()
     print(f"[load] -> {TABLE}")

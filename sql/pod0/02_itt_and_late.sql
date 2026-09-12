@@ -9,8 +9,9 @@
 --                              -> this judges creative / algorithm quality and pricing.
 --
 -- Note on the CI for LATE: dividing the ITT bounds by the compliance rate treats
--- compliance as known. With n = 14M that is harmless, but the textbook-correct way
--- is a delta-method / Wald-ratio interval. 我们先用近似, 到 Pod 1 再做严格版。
+-- compliance as known. At n = 14M that approximation is harmless, but the
+-- textbook-correct interval is a delta-method / Wald-ratio one. The rigorous version
+-- lands in Pod 1.
 
 WITH arm AS (
     SELECT

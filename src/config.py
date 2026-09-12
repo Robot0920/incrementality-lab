@@ -1,8 +1,8 @@
 """Single source of truth for every path in the project.
 
-任何脚本都不要自己拼路径 (never hardcode a path elsewhere) —— 全部从这里 import。
-这条纪律的现实理由: 当你要把同一套 pipeline 从 Codespace 搬到 BigQuery 时,
-只需要改这一个文件。
+No script builds a path of its own; everything imports from here. The practical reason
+for the discipline: when this pipeline moves from a Codespace to BigQuery, exactly one
+file has to change.
 """
 
 from __future__ import annotations

@@ -3,10 +3,11 @@
 One function, one job. Everything in the project talks to DuckDB through here so
 that the medallion schemas (bronze / silver / gold) are guaranteed to exist.
 
-Medallion 层的含义 (记住这三层, 面试常问):
-  bronze  = 原始落地, 不改一个字节, 可重放 (raw, append-only, replayable)
-  silver  = 清洗 + 语义化, 一行一个业务事件 (cleaned, conformed, one row = one event)
-  gold    = 可直接给指标/dashboard/模型用的聚合宽表 (serving layer)
+The medallion layers:
+  bronze  raw landing zone, not one byte altered, replayable
+  silver  cleaned and conformed, one row = one business event
+  gold    serving layer: aggregates a metric, dashboard or model can consume directly
+  ops     operational metadata: ingest log, change events, data-quality results
 """
 
 from __future__ import annotations

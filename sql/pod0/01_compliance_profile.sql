@@ -1,11 +1,19 @@
 -- Pod 0 / S4 — What is the compliance structure of this experiment?
 --
--- 这是拿到任何实验数据后的第一条查询, 不是 avg(outcome) by group。
--- Read three things off the output:
---   1. the randomization ratio      -> why is it not 50/50?
---   2. whether exposure = 1 ever occurs in control
---                                   -> one-sided vs two-sided non-compliance
---   3. the conversion base rate     -> how brutal is your sample-size math?
+-- This is the first query to run on any experiment data — NOT avg(outcome) by group.
+-- Understand the design before looking at any result, so a dramatic number cannot
+-- anchor your thinking.
+--
+-- Read four things off the output:
+--   1. the allocation ratio, from pct_of_all       -> why is it not 50/50?
+--   2. the compliance rate, from pct_within_arm    -> the denominator of a LATE
+--   3. whether exposure = 1 ever occurs in control -> one- vs two-sided non-compliance
+--   4. the control-arm base rate                   -> how brutal is the sample-size math?
+--
+-- On the two share columns: an aggregate may be nested inside a window function
+-- because SQL evaluates GROUP BY and aggregation BEFORE window functions, so
+-- sum(count(*)) OVER () means "add up the n of every group". Identical syntax in
+-- BigQuery, Snowflake and Postgres.
 
 SELECT
     treatment,

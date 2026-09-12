@@ -19,8 +19,12 @@ from scipy.stats import norm
 def mde_absolute(p: float, n_control: float, n_treat: float, alpha: float = 0.05, power: float = 0.80) -> float:
     """Minimum detectable effect, in absolute percentage points.
 
-    Two-proportion z-test, two-sided. The (z_alpha/2 + z_beta) multiplier is ~2.80
-    for the conventional alpha=.05 / power=.80 —— 面试里直接说 "2.8 倍标准误" 就够。
+    Two-proportion z-test, two-sided. The (z_alpha/2 + z_beta) multiplier is ~2.80 at the
+    conventional alpha = .05 / power = .80, so "2.8 standard errors" is a usable
+    back-of-envelope form.
+
+    Note which n dominates: 1/n_control + 1/n_treatment is driven by the SMALLER arm, so
+    power is governed by the smaller arm. Growing the treatment arm buys almost nothing.
     """
     z = norm.ppf(1 - alpha / 2) + norm.ppf(power)
     se = (p * (1 - p) * (1 / n_control + 1 / n_treat)) ** 0.5

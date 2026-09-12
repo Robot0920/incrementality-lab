@@ -1,7 +1,8 @@
 """Run one .sql file against the warehouse and print the result.
 
-Convention: ONE statement per file. 这不是偷懒, 是刻意的纪律 —— 一个文件一个问题,
-文件名就是问题本身, 之后可以直接搬进 dbt 成为一个 model。
+Convention: ONE statement per file. That is deliberate discipline, not laziness — one
+file answers one question, the filename states the question, and the file can later be
+promoted into a dbt model unchanged.
 
 Run:
     python -m src.sqlrun sql/pod0/01_compliance_profile.sql
