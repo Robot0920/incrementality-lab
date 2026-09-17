@@ -210,9 +210,19 @@ estimators" is a credential. The difference is ground truth plus validation.
 - `[CORE]` uplift model vs propensity model; Qini/AUUC; why targeting ≠ prediction
 - `[EXT]` serving, monitoring, drift, offline-online gap
 
-**Pod 4 — Market feedback**
+**Pod 4 — Market feedback (also the generative-AI pod; see `docs/03_aws_alignment.md`)**
 - `[CORE]` artist feedback → topic signal → leading indicator of campaign churn
+- `[CORE]` **RCA Agent**: the triage order + `ops.change_events` + metric tree exposed as
+  an agent that takes "revenue is down 8% WoW" and returns ranked, evidence-backed
+  hypotheses. Evaluated against the injected incidents, whose causes are known.
 - `[EXT]` feeding the quarterly sizing memo
 
 **Drills**
 - `[CORE]` incident injection + timed RCA against known ground truth
+
+**AWS track** (runs behind the local track, one domain at a time)
+- `[CORE]` D1: Parquet + Hive partitions → S3 → Glue Crawler → Athena → Glue Data Quality
+- `[CORE]` D2: SageMaker T-learner uplift model, Clarify, Model Registry
+- `[CORE]` D3: SageMaker Pipelines + Batch Transform + EventBridge, all via CDK
+- `[CORE]` D4: Model Monitor + CloudWatch alarms + CloudTrail as `change_events`
+- `[EXT]` Bedrock Knowledge Base and Agent for the RCA Agent

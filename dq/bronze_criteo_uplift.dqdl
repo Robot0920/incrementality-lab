@@ -1,0 +1,57 @@
+// Data-quality ruleset for bronze.criteo_uplift
+//
+// Written in AWS Glue Data Quality's rule language (DQDL) so it can be attached to a Glue
+// job unchanged when Pod 0 ports to AWS. Locally it is the declarative form of the
+// ingestion gate that currently lives in src/ingest/criteo_uplift.py.
+//
+// Verify the syntax against the current Glue DQDL reference before pasting into a Glue
+// job; the rule vocabulary gains new rule types over time.
+//
+// The last two rules are the interesting ones: they encode IDENTIFYING ASSUMPTIONS, not
+// data hygiene. A causal estimate downstream is only valid while they hold, so they belong
+// in the pipeline's failure conditions rather than in a comment.
+
+Rules = [
+
+    // ---- shape -----------------------------------------------------------------
+    // The published row count. A truncated download must fail here, not surface later
+    // as a quietly wrong effect size.
+    RowCount = 13979592,
+
+    // ---- completeness ----------------------------------------------------------
+    // avg() silently skips NULLs, which would shrink a rate's denominator without
+    // warning. Every column used in a rate must be fully populated.
+    IsComplete "treatment",
+    IsComplete "exposure",
+    IsComplete "visit",
+    IsComplete "conversion",
+
+    // ---- domain ----------------------------------------------------------------
+    ColumnValues "treatment"  in [0, 1],
+    ColumnValues "exposure"   in [0, 1],
+    ColumnValues "visit"      in [0, 1],
+    ColumnValues "conversion" in [0, 1],
+
+    // ---- design ----------------------------------------------------------------
+    // Allocation ratio: 85% treated, within a tolerance that would still catch a
+    // bucketing bug (this is the declarative cousin of a sample-ratio-mismatch test).
+    ColumnValues "treatment" with threshold between 0.84 and 0.86,
+
+    // ---- identifying assumptions ----------------------------------------------
+    // One-sided non-compliance: a control user can never be exposed. If this ever
+    // returns a non-zero count, LATE = ITT / compliance is no longer valid and every
+    // causal number downstream must be recomputed.
+    CustomSql "SELECT count(*) FROM primary WHERE treatment = 0 AND exposure = 1" = 0,
+
+    // Outcome nesting -- UNVERIFIED, left disabled on purpose.
+    // The intuition is that a conversion implies a visit, so this count should be 0. But
+    // that is a hypothesis about how Criteo defined the labels, not something the
+    // documentation states: a conversion could have been attributed through another
+    // channel entirely. Run the query first:
+    //     SELECT count(*) FROM bronze.criteo_uplift WHERE conversion = 1 AND visit = 0;
+    // If it returns 0, uncomment the rule. If it does not, delete the rule and write down
+    // what the labels actually mean -- that finding is more valuable than the rule.
+    // Never ship a data-quality rule you have not seen pass.
+    //
+    // CustomSql "SELECT count(*) FROM primary WHERE conversion = 1 AND visit = 0" = 0
+]

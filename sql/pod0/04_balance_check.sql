@@ -25,10 +25,10 @@
 --   * conditional aggregation:  avg(CASE WHEN treatment = 1 THEN f0 END)
 --     (CASE returns NULL otherwise, and avg() skips NULLs -- here that is exactly
 --     what you want, but remember it is also pitfall #5 in the playbook)
---   * to go from wide to long, either UNION ALL twelve small SELECTs, or compute a
---     wide row first and then UNPIVOT it:
---         SELECT * FROM (<wide query>) UNPIVOT (value FOR covariate IN (f0, f1, ...))
---   * var_samp(x) is the sample variance in DuckDB
+--   * to go from wide to long, use UNION ALL over twelve small SELECTs. Do NOT use
+--     DuckDB's UNPIVOT: this file has to parse on Athena (Trino) too, per the portable-SQL
+--     rule in docs/03_aws_alignment.md. UNION ALL is more typing and runs everywhere.
+--   * var_samp(x) is the sample variance, and exists on both DuckDB and Athena
 --   * write it incrementally: get f0 alone working for split A, then add split B,
 --     then generalize to all twelve columns. Never try to write the final form first.
 --
