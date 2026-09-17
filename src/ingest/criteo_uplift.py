@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import argparse
 import time
-from datetime import datetime, timezone
 
 import requests
 from tqdm import tqdm
@@ -81,13 +80,18 @@ def load_bronze() -> int:
     """
     con = connect()
     print(f"[load] -> {TABLE}")
+    # The interpolated values here are module-level constants, not user input, so string
+    # interpolation is safe. Anything reaching this from outside the repo must instead be
+    # passed as a query parameter (con.execute(sql, [value])) to avoid SQL injection.
+    # _loaded_at uses the database's own now() rather than a Python timestamp: fewer
+    # timezone and formatting failure modes, and the value is consistent across rows.
     con.execute(
         f"""
         CREATE OR REPLACE TABLE {TABLE} AS
         SELECT
             *,
-            '{SOURCE_URL}'                 AS _source,
-            TIMESTAMP '{datetime.now(timezone.utc):%Y-%m-%d %H:%M:%S}' AS _loaded_at
+            '{SOURCE_URL}' AS _source,
+            now()          AS _loaded_at
         FROM read_csv_auto('{RAW_FILE}', header = true)
         """
     )
