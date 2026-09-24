@@ -7,9 +7,9 @@ It is one of the very few PUBLIC logs of a real large-scale randomized experimen
 with 12 anonymized features plus three outcome columns.
 
 The column that makes it special is `exposure`: being *assigned* to treatment is not the
-same as actually *seeing* the ad. That gap is our product's hardest measurement problem —
-an artist turning Amplify on is not the same as the algorithm actually promoting them —
-and it is exactly what separates ITT from LATE.
+same as actually *seeing* the ad. The auction, inventory and frequency caps sit in between,
+and they do not select users at random. That gap is what separates ITT from LATE, and it is
+where non-experimental estimates of promotion effects usually go wrong.
 
 Caveat recorded in docs/02_data_dictionary.md: the authors sub-sampled non-uniformly to
 hide the true incrementality levels, so the METHODS here transfer but the effect

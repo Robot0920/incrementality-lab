@@ -1,0 +1,13 @@
+# Causal-inference stack, installed on demand rather than at environment build.
+#
+# These pull heavy transitive dependencies and occasionally need compilation, so they are
+# kept out of requirements.txt: ingestion, SQL and power analysis must work in a minimal
+# environment even if this file fails to resolve. See docs/00_decision_log.md, D9.
+#
+#     pip install -r requirements-causal.txt
+
+econml>=0.15        # DR-learner, DML, cross-fitted estimation of heterogeneous effects
+dowhy>=0.11         # refutation tests: placebo treatment, random common cause, data subset
+causalml>=0.15      # meta-learners and uplift evaluation (Qini, AUUC)
+scikit-learn>=1.5
+xgboost>=2.1

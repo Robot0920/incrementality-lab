@@ -1,5 +1,5 @@
 {
-  "name": "revenue-engine",
+  "name": "incrementality-lab",
   "image": "mcr.microsoft.com/devcontainers/python:1-3.11-bookworm",
   "postCreateCommand": "pip install --upgrade pip && pip install -r requirements.txt",
   "hostRequirements": {

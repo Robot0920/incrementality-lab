@@ -24,3 +24,6 @@ logs/
 # editor / os
 .DS_Store
 .vscode/settings.json
+
+# personal working notes, not shared
+NOTES.local.md

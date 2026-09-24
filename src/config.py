@@ -15,7 +15,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 # `RE_DATA_DIR` lets you relocate all data without touching code.
 DATA_DIR = Path(os.getenv("RE_DATA_DIR", REPO_ROOT / "data"))
 RAW_DIR = DATA_DIR / "raw"
-DB_PATH = Path(os.getenv("RE_DB_PATH", DATA_DIR / "revenue.duckdb"))
+DB_PATH = Path(os.getenv("RE_DB_PATH", DATA_DIR / "incrementality.duckdb"))
 
 SQL_DIR = REPO_ROOT / "sql"
 DOCS_DIR = REPO_ROOT / "docs"

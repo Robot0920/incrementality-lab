@@ -1,3 +1,0 @@
-# Installed at Pod 0 stage S3 (transformation layer), not on day one.
-dbt-core>=1.8
-dbt-duckdb>=1.8

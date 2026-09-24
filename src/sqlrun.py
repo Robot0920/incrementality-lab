@@ -5,7 +5,7 @@ file answers one question, the filename states the question, and the file can la
 promoted into a dbt model unchanged.
 
 Run:
-    python -m src.sqlrun sql/pod0/01_compliance_profile.sql
+    python -m src.sqlrun sql/01_design_audit.sql
 """
 
 from __future__ import annotations
