@@ -99,7 +99,7 @@ data/                          git-ignored; everything lives in data/incremental
 
 ## 4. Running it
 
-Requires Python 3.11+. In a GitHub Codespace everything is installed automatically;
+Requires Python 3.12 (see `docs/00_decision_log.md`, D14). In a GitHub Codespace everything is installed automatically;
 locally, `pip install -r requirements.txt` first.
 
 | Step | Command | What it does | What you should see |
@@ -185,3 +185,4 @@ Every number in this repository carries a provenance label: `Measured`, `Benchma
 - Waudby-Smith et al. (2023), *Anytime-Valid Confidence Sequences in an Enterprise A/B Testing Platform*, WWW — [arXiv](https://arxiv.org/pdf/2302.10108)
 - PyWhy — [DoWhy](https://github.com/py-why/dowhy) · [EconML](https://github.com/py-why/EconML) · Uber [CausalML](https://github.com/uber/causalml)
 - Spotify — [confidence](https://github.com/spotify/confidence)
+- Facure, *Causal Inference for the Brave and True* — [python-causality-handbook](https://github.com/matheusfacure/python-causality-handbook)

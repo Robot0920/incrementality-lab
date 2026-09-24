@@ -184,3 +184,91 @@ diffs unreviewable.
 
 **Consequence.** Scripts and SQL files are the unit of work. Notebooks, if added, are for
 presentation of results already produced by scripts.
+
+## D13 · Dependencies selected on measured maintenance, not reputation
+
+**Context.** D5 named libraries from familiarity. Several well-known causal-inference
+packages are no longer maintained, and an unmaintained dependency is a liability that only
+shows up later.
+
+**Decision.** Selection made against repository metadata measured on 2026-09-24:
+
+| Library | Stars | Last push | Licence | Outcome |
+|---|---:|---|---|---|
+| py-why/dowhy | 8,327 | 2026-09-24 | MIT | adopted |
+| py-why/EconML | 4,798 | 2026-09-21 | MIT | adopted |
+| uber/causalml | 6,008 | 2026-08-20 | Apache-2.0 | adopted |
+| spotify/confidence | 303 | 2026-02-26 | Apache-2.0 | adopted |
+| WillianFuks/tfcausalimpact | 678 | 2026-09-20 | Apache-2.0 | conditional: needs a time dimension this dataset lacks |
+| st-tech/zr-obp | 710 | 2024-06-03 | Apache-2.0 | deferred to any off-policy-evaluation work |
+| maks-sh/scikit-uplift | 818 | 2023-10-21 | MIT | rejected: stale, superseded by causalml |
+| hakuhodo-technologies/scope-rl | 143 | 2024-03-18 | Apache-2.0 | rejected: niche and stale |
+| criteo-research/reco-gym | 482 | 2021-07-09 | Apache-2.0 | rejected: dormant, and answers a different question (D4) |
+
+GitHub reports EconML and CausalML as "NOASSERTION" because of the formatting of their
+LICENSE files; the file contents are MIT and Apache-2.0 respectively, both permissive.
+
+**Consequence.** Every dependency here was pushed to within the last two months except
+where explicitly deferred.
+
+## D14 · Python pinned to 3.12
+
+**Context.** Wheel availability measured on PyPI, 2026-09-24: `causalml` 0.17.0 requires
+>=3.11 and publishes wheels for cp311 and cp312 only; `econml` 0.17.0 covers cp310-cp313;
+`dowhy` 0.14 is pure Python.
+
+**Decision.** 3.12 — the only version where every dependency installs from a prebuilt
+wheel.
+
+**Rejected.** 3.11 (works, but older); 3.13 (would force causalml to compile from source on
+a two-core machine).
+
+**Consequence.** Recorded in the devcontainer with the reasoning inline, so the pin is not
+silently bumped later.
+
+## D15 · Confidence sequences implemented in-repo rather than taken from `confseq`
+
+**Context.** `confseq` is the reference implementation from the confidence-sequence
+literature, but its latest release (0.0.11) ships wheels only up to cp310. On 3.11+ pip
+compiles C++ from source, which is slow and fragile in a small container.
+
+**Decision.** Implement the asymptotic confidence sequence directly — roughly fifteen lines
+— and validate it with a simulation harness that checks the empirical false-positive rate
+against the nominal level under the null.
+
+**Rejected.** Depending on `confseq`; and implementing without validation.
+
+**Consequence.** The validation harness is a prerequisite for using the estimator anywhere
+else, and is built before the study that depends on it. A published formula transcribed
+incorrectly is worse than no formula.
+
+## D16 · Criteo Attribution dataset verified, then deferred
+
+**Context.** A second Criteo dataset supplies exactly what this one lacks: timestamps,
+campaign identifiers and cost, across 16M+ impressions and 700 campaigns over 30 days.
+
+**Verification (2026-09-24).** `https://go.criteo.net/criteo-research-attribution-dataset.zip`
+returns 206 on a ranged GET, redirecting to Azure blob storage. Two operational notes: the
+host rejects HEAD requests, so probe with `curl -r 0-2000`; and despite the `.zip`
+extension and `application/zip` content type the payload begins `1f 8b 08 08`, which is
+gzip, so `unzip` will fail on it.
+
+**Decision.** Record it as the leading candidate for a separate pipeline project. Do not
+introduce it here.
+
+**Rejected.** Adding it now. This study needs ground truth, and an observational log has
+none, so it cannot serve the question. Adding it would repeat the scope drift that D1 was
+written to correct.
+
+## D17 · Toolchain: uv and ruff
+
+**Context.** Cold-start time and an unconfigured linter. The devcontainer already installed
+the ruff extension but the repository had no ruff configuration, so the extension did
+nothing.
+
+**Decision.** `uv` (Apache-2.0, 90k stars, actively developed) for dependency installation
+in the devcontainer; `ruff` (MIT, 50k stars) configured in `pyproject.toml` for lint and
+format, with format-on-save enabled.
+
+**Consequence.** Dependency configuration stays in `requirements*.txt`, read identically by
+uv and pip; `pyproject.toml` holds tooling configuration only.

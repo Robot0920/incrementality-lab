@@ -1,0 +1,14 @@
+# Tooling configuration only. Dependencies live in requirements*.txt so that the
+# devcontainer, uv and pip all read the same source of truth.
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+exclude = ["data", ".venv"]
+
+[tool.ruff.lint]
+# E,F pyflakes/pycodestyle · I import order · UP pyupgrade · B bugbear · SIM simplify
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src", "scripts"]

@@ -1,13 +1,23 @@
 # Causal-inference stack, installed on demand rather than at environment build.
 #
-# These pull heavy transitive dependencies and occasionally need compilation, so they are
-# kept out of requirements.txt: ingestion, SQL and power analysis must work in a minimal
-# environment even if this file fails to resolve. See docs/00_decision_log.md, D9.
+# Kept out of requirements.txt so that ingestion, SQL and power analysis still work if this
+# resolution fails. See docs/00_decision_log.md, D9.
 #
-#     pip install -r requirements-causal.txt
+#     uv pip install --system -r requirements-causal.txt
+#
+# Versions verified against PyPI on 2026-09-24. Wheel availability drove the Python 3.12
+# pin in .devcontainer/devcontainer.json:
+#   dowhy     pure-Python wheel, requires >=3.9,<3.14
+#   econml    wheels for cp310-cp313
+#   causalml  wheels for cp311/cp312 only, requires >=3.11   <- the binding constraint
+#
+# confseq is deliberately absent: its newest release ships wheels only up to cp310, so on
+# 3.11+ pip compiles C++ from source. The asymptotic confidence sequence is implemented in
+# this repository instead, with a false-positive-rate validation harness.
 
-econml>=0.15        # DR-learner, DML, cross-fitted estimation of heterogeneous effects
-dowhy>=0.11         # refutation tests: placebo treatment, random common cause, data subset
-causalml>=0.15      # meta-learners and uplift evaluation (Qini, AUUC)
+dowhy>=0.14,<0.15        # refutation: placebo treatment, random common cause, data subset
+econml>=0.17,<0.18       # DR-learner, DML, cross-fitted heterogeneous effects
+causalml>=0.17,<0.18     # meta-learners, Qini and AUUC
+spotify-confidence>=4.1  # experiment readout, incl. sequential methods
 scikit-learn>=1.5
 xgboost>=2.1
