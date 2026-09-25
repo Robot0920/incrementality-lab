@@ -69,7 +69,7 @@ README.md                      you are here
 Makefile                       every step has a named target; see Section 4
 
 docs/
-  00_decision_log.md           every methodological choice, what was rejected, and why
+  00_metrics.md                hypothesis, north star, drivers, guardrails, gaming review
   01_data_dictionary.md        Criteo-UPLIFT columns, the role of each, and the caveats
   02_analysis_standards.md     how an unfamiliar dataset is taken on, and reporting rules
   03_study_design.md           protocol for the headline study, fixed before the data
@@ -137,9 +137,6 @@ in [`docs/03_study_design.md`](docs/03_study_design.md) and is not renegotiated 
 results are seen.
 
 ## 6. Methods, and why these ones
-
-Full reasoning, including what was considered and rejected, is in
-[`docs/00_decision_log.md`](docs/00_decision_log.md).
 
 | Area | Choice | One-line reason |
 |---|---|---|
