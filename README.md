@@ -99,7 +99,7 @@ data/                          git-ignored; everything lives in data/incremental
 
 ## 4. Running it
 
-Requires Python 3.12 (see `docs/00_decision_log.md`, D14). In a GitHub Codespace everything is installed automatically;
+Requires Python 3.12 — the only version with prebuilt wheels for every dependency. In a GitHub Codespace everything is installed automatically;
 locally, `pip install -r requirements.txt` first.
 
 | Step | Command | What it does | What you should see |
