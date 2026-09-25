@@ -55,6 +55,9 @@ All figures produced by the commands in Section 4, from the raw file, reproducib
 | Hidden baseline of reached users, recovered from a mixture identity | 12.76% visit vs 3.49% for everyone else (**3.7x**) | [`sql/03_exposure_bias.sql`](sql/03_exposure_bias.sql) |
 | Negative control: unexposed-treated vs control | z = **−23.3**, rejecting "delivery is random" | [`sql/03_exposure_bias.sql`](sql/03_exposure_bias.sql) |
 | Detectable effect at this design | 4.8% relative, vs 3.4% at a 50/50 split | [`src/power.py`](src/power.py) |
+| **Inspecting a fixed-horizon test 30 times raises its false-positive rate from 5% to 33%** | 5.60% -> 33.37% (3,000 simulations) | [`src/validate_intervals.py`](src/validate_intervals.py) |
+| The anytime-valid interval holds its error rate under the same 30 inspections | 1.23% (<= 5%), coverage 99.8% | [`src/validate_intervals.py`](src/validate_intervals.py) |
+| Price of being allowed to look whenever you like | interval 1.55x wider | [`src/validate_intervals.py`](src/validate_intervals.py) |
 
 The bias is established two independent ways — `ITT / compliance` and a mixture identity
 that recovers the reached users' hidden baseline — and the two agree to three decimals.
@@ -109,7 +112,8 @@ locally, `pip install -r requirements.txt` first.
 | 3 | `make audit` | Design audit and covariate balance | An 85/15 split, 3.6% delivery, near-zero SMD on assignment, large SMD on delivery |
 | 4 | `make estimate` | ITT, LATE, and the bias decomposition | The numbers in Section 2 |
 | 5 | `make power` | Holdout size versus detectable effect | A frontier from a 50% to a 1% holdout |
-| — | `make all` | Steps 1 through 5 in order | |
+| 6 | `make validate` | Simulates 3,000 experiments with no true effect and measures how often each interval method claims one | Single-look Wald ~5%, repeatedly-inspected Wald ~33%, confidence sequence ~1% |
+| — | `make all` | Steps 1 through 6 in order | |
 
 If a step fails, it fails loudly: the ingestion asserts the published row count, and the
 data-quality rules assert that no control unit was ever exposed.
@@ -169,7 +173,8 @@ Every number in this repository carries a provenance label: `Measured`, `Benchma
 | Design audit, delivery rate, base rates | done |
 | ITT, LATE, bias quantified two ways | done |
 | Covariate balance | generated, not yet run |
-| Anytime-valid confidence sequences, with a false-positive-rate validation harness | next |
+| Deterministic sample fixture for code validation | generator written, not yet run |
+| Anytime-valid confidence sequences, with a false-positive-rate validation harness | done |
 | AIPW / DML / DR-learner comparison | next |
 | Model-based counterfactual versus truth (the headline study) | next |
 | Calibrated simulator and stress grid | after that |

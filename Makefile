@@ -1,4 +1,4 @@
-.PHONY: help all ingest profile audit estimate power gen clean deep-clean
+.PHONY: help all ingest profile audit estimate power validate fixture gen clean deep-clean
 
 PY ?= python
 
@@ -9,14 +9,16 @@ help:
 	@echo "  make audit     design audit and covariate balance"
 	@echo "  make estimate  ITT, LATE, and the exposure-bias decomposition"
 	@echo "  make power     holdout size versus detectable effect"
+	@echo "  make validate  measure the actual error rate of the interval methods"
 	@echo "  make all       all of the above, in order"
 	@echo ""
+	@echo "  make fixture   write a small deterministic sample for code validation"
 	@echo "  make gen       regenerate the generated SQL files"
 	@echo "  make clean     drop the warehouse, keep the downloaded file"
 	@echo "  make deep-clean also delete the downloaded file"
 	@echo ""
 
-all: ingest profile audit estimate power
+all: ingest profile audit estimate power validate
 
 ingest:
 	$(PY) -m src.ingest.criteo_uplift
@@ -34,6 +36,12 @@ estimate:
 
 power:
 	$(PY) -m src.power
+
+validate:
+	$(PY) -m src.validate_intervals
+
+fixture:
+	$(PY) scripts/make_fixture.py
 
 gen:
 	$(PY) scripts/gen_balance_sql.py

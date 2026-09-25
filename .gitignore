@@ -27,3 +27,6 @@ logs/
 
 # personal working notes, not shared
 NOTES.local.md
+
+# fixture is committed on purpose; everything else under data/ is not
+!tests/fixtures/*.parquet
