@@ -1,4 +1,4 @@
-.PHONY: help all ingest profile audit estimate power validate fixture gen clean deep-clean
+.PHONY: help all ingest profile audit estimate power validate calibrate simulate converge fixture gen clean deep-clean
 
 PY ?= python
 
@@ -10,6 +10,10 @@ help:
 	@echo "  make estimate  ITT, LATE, and the exposure-bias decomposition"
 	@echo "  make power     holdout size versus detectable effect"
 	@echo "  make validate  measure the actual error rate of the interval methods"
+	@echo ""
+	@echo "  make calibrate solve the simulator parameters against the real data's moments"
+	@echo "  make simulate  draw one simulated experiment and print its moments"
+	@echo "  make converge  check the simulator reproduces the population it was fitted to"
 	@echo "  make all       all of the above, in order"
 	@echo ""
 	@echo "  make fixture   write a small deterministic sample for code validation"
@@ -39,6 +43,15 @@ power:
 
 validate:
 	$(PY) -m src.validate_intervals
+
+calibrate:
+	$(PY) scripts/calibrate_simulator.py
+
+simulate:
+	$(PY) -m src.simulate
+
+converge:
+	$(PY) scripts/check_simulator_convergence.py
 
 fixture:
 	$(PY) scripts/make_fixture.py

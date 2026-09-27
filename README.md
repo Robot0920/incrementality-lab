@@ -89,10 +89,16 @@ src/
   sqlrun.py                    runs one .sql file and prints the result
   profile_asset.py             capability matrix: what can this table actually support?
   power.py                     holdout size versus detectable effect
+  intervals.py                 fixed-horizon and anytime-valid intervals
+  validate_intervals.py        measures what those intervals actually do
+  simulate.py                  calibrated data-generating process with a known effect
   ingest/criteo_uplift.py      download, load to bronze, assert the row count
 
 scripts/
   gen_balance_sql.py           generates sql/04; edit this, not the SQL
+  calibrate_simulator.py       solves the simulator's parameters against real moments
+  check_simulator_convergence.py  confirms the simulator reproduces what it was fitted to
+  make_fixture.py              deterministic sample for validating code without the full file
 
 dq/
   criteo_uplift.dqdl           data-quality rules, including the identifying assumptions
@@ -113,6 +119,8 @@ locally, `pip install -r requirements.txt` first.
 | 4 | `make estimate` | ITT, LATE, and the bias decomposition | The numbers in Section 2 |
 | 5 | `make power` | Holdout size versus detectable effect | A frontier from a 50% to a 1% holdout |
 | 6 | `make validate` | Simulates 3,000 experiments with no true effect and measures how often each interval method claims one | Single-look Wald ~5%, repeatedly-inspected Wald ~33%, confidence sequence ~1% |
+| 7 | `make calibrate` | Solves four simulator parameters against three measured moments | Residual 4e-15, and an unfitted fourth moment closing on its own |
+| 8 | `make converge` | Checks the simulator reproduces the population it was fitted to | `unbiased at every size tested` |
 | — | `make all` | Steps 1 through 6 in order | |
 
 If a step fails, it fails loudly: the ingestion asserts the published row count, and the
