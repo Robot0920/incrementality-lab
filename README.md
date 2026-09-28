@@ -76,6 +76,8 @@ docs/
   01_data_dictionary.md        Criteo-UPLIFT columns, the role of each, and the caveats
   02_analysis_standards.md     how an unfamiliar dataset is taken on, and reporting rules
   03_study_design.md           protocol for the headline study, fixed before the data
+  04_estimator_selection.md    why these three estimators, on theory, mathematics,
+                               data characteristics and operational limits
 
 sql/
   01_design_audit.sql          allocation, delivery rate, base rates
