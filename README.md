@@ -78,6 +78,8 @@ docs/
   03_study_design.md           protocol for the headline study, fixed before the data
   04_estimator_selection.md    why these three estimators, on theory, mathematics,
                                data characteristics and operational limits
+  05_findings_estimation.md    interim result: estimation error with the confounder
+                               fully observed, and how far hyperparameters move it
 
 sql/
   01_design_audit.sql          allocation, delivery rate, base rates
@@ -94,6 +96,8 @@ src/
   intervals.py                 fixed-horizon and anytime-valid intervals
   validate_intervals.py        measures what those intervals actually do
   simulate.py                  calibrated data-generating process with a known effect
+  estimators.py                the estimator ladder: ITT, LATE, and three modelled levels
+  validate_estimators.py       grades every estimator against a known answer
   ingest/criteo_uplift.py      download, load to bronze, assert the row count
 
 scripts/
