@@ -4,16 +4,18 @@ At `observability = 1.0` the covariates reveal the confounding trait exactly, so
 ignorability holds and the modelled counterfactual is identified. Any bias that remains is
 estimation error, not identification error.
 
-Every boosted estimator is run under two configurations that differ in exactly two knobs:
+Every boosted estimator is run under three configurations:
 
     def   scikit-learn's defaults for min_samples_leaf (20) and l2_regularization (0)
-    reg   min_samples_leaf = 500, l2_regularization = 1.0
+    reg   min_samples_leaf = 500, l2_regularization = 1.0, chosen by hand
+    sel   chosen by held-out log-loss in src/select_hyperparameters.py, separately for the
+          outcome and propensity models, never against the known effect
 
-Both are defensible choices that a competent team might make without thinking hard about
-either. Reporting them side by side answers a question that matters more than any single
-number: **does the choice of hyperparameters move the answer as much as the choice of
-estimator?** If it does, there is no such thing as "the" modelled-counterfactual estimate,
-and that is a finding about the method rather than about this implementation.
+The first two are defensible choices a competent team might make without thinking hard
+about either. Reporting them side by side answers a question that matters more than any
+single number: **does the choice of hyperparameters move the answer as much as the choice
+of estimator?** The third asks the follow-up: **does choosing responsibly narrow the
+range?**
 
 Estimators that do not involve boosting -- the naive comparison, ITT, LATE, and the
 logistic Level 1 -- are computed once, since the configuration cannot affect them.
@@ -32,6 +34,8 @@ import numpy as np
 from src.estimators import (
     BOOSTED_DEFAULTS,
     BOOSTED_REGULARISED,
+    OUTCOME_KWARGS,
+    PROPENSITY_KWARGS,
     aipw_both,
     itt,
     late,
@@ -40,7 +44,14 @@ from src.estimators import (
 )
 from src.simulate import simulate
 
-CONFIGS = {"def": BOOSTED_DEFAULTS, "reg": BOOSTED_REGULARISED}
+# (outcome-model config, propensity-model config). The first two share one config for both,
+# which is what a single BOOSTED_KWARGS forced; the third uses the pair chosen by held-out
+# log-loss in src/select_hyperparameters.py.
+CONFIGS = {
+    "def": (BOOSTED_DEFAULTS, BOOSTED_DEFAULTS),
+    "reg": (BOOSTED_REGULARISED, BOOSTED_REGULARISED),
+    "sel": (OUTCOME_KWARGS, PROPENSITY_KWARGS),
+}
 
 
 def run_all(p, folds: int, seed: int) -> tuple[dict[str, tuple[float, str]], dict]:
@@ -56,15 +67,16 @@ def run_all(p, folds: int, seed: int) -> tuple[dict[str, tuple[float, str]], dic
     ):
         out[est.method] = (est.value, est.targets)
 
-    for label, kwargs in CONFIGS.items():
+    for label, (outcome_kwargs, propensity_kwargs) in CONFIGS.items():
         plain, hajek = aipw_both(p.x, p.outcome, p.assigned, p.delivered,
-                                 folds=folds, seed=seed, boosted_kwargs=kwargs)
+                                 folds=folds, seed=seed, boosted_kwargs=outcome_kwargs,
+                                 propensity_kwargs=propensity_kwargs)
         for est in (
             modelled_counterfactual(p.x, p.outcome, p.assigned, p.delivered,
-                                    model="boosted", boosted_kwargs=kwargs),
+                                    model="boosted", boosted_kwargs=outcome_kwargs),
             modelled_counterfactual(p.x, p.outcome, p.assigned, p.delivered,
                                     model="boosted", calibrate=True, seed=seed,
-                                    boosted_kwargs=kwargs),
+                                    boosted_kwargs=outcome_kwargs),
             plain,
             hajek,
         ):
@@ -116,12 +128,15 @@ def pass_at(observability: float, n: int, reps: int, folds: int, base_seed: int)
     # estimators differ from one another? If the first is comparable to the second, the
     # method does not have a single answer.
     print("\n  sensitivity to configuration, at fixed estimator")
+    labels = list(CONFIGS)
+    print(f"    {'':<28}" + "".join(f"{lab:>12}" for lab in labels) + f"{'swing':>10}")
     for stem in ("level2_boosted", "level2_boosted_calibrated",
                  "level3_aipw_plain", "level3_aipw_hajek"):
-        a, b = summary.get(f"{stem}@def"), summary.get(f"{stem}@reg")
-        if a and b:
-            print(f"    {stem:<28} {a[2]:>+8.1%} (def)  ->  {b[2]:>+8.1%} (reg)   "
-                  f"swing {abs(b[2] - a[2]):.1%}")
+        rows = [summary.get(f"{stem}@{lab}") for lab in labels]
+        if all(rows):
+            values = [r[2] for r in rows]
+            print(f"    {stem:<28}" + "".join(f"{v:>+11.1%} " for v in values)
+                  + f"{max(values) - min(values):>9.1%}")
 
     spread_across_estimators = max(
         abs(v[2]) for k, v in summary.items() if k.startswith(("level1", "level2", "level3"))

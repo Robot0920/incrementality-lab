@@ -47,7 +47,15 @@ from sklearn.model_selection import StratifiedKFold, train_test_split
 BOOSTED_DEFAULTS = dict(max_iter=150, learning_rate=0.1, max_leaf_nodes=31,
                         early_stopping=False, random_state=0)
 BOOSTED_REGULARISED = dict(**BOOSTED_DEFAULTS, min_samples_leaf=500, l2_regularization=1.0)
-BOOSTED_KWARGS = BOOSTED_REGULARISED
+
+# Selected by src/select_hyperparameters.py on held-out log-loss, never against the known
+# effect. The two models are selected separately because their jobs differ: the outcome
+# model's mean prediction enters the estimate directly, while the propensity model's
+# extremes drive the weights.
+OUTCOME_KWARGS = dict(**BOOSTED_DEFAULTS, min_samples_leaf=100, l2_regularization=10.0)
+PROPENSITY_KWARGS = dict(**BOOSTED_DEFAULTS, min_samples_leaf=20, l2_regularization=10.0)
+
+BOOSTED_KWARGS = OUTCOME_KWARGS
 
 LOGISTIC_KWARGS = dict(max_iter=1000)
 
@@ -164,8 +172,8 @@ def modelled_counterfactual(x: np.ndarray, outcome: np.ndarray, assigned: np.nda
 
 def aipw_cross_fitted(x: np.ndarray, outcome: np.ndarray, assigned: np.ndarray,
                       delivered: np.ndarray, *, folds: int = 3, seed: int = 0,
-                      normalized: bool = True,
-                      boosted_kwargs: dict | None = None) -> Estimate:
+                      normalized: bool = True, boosted_kwargs: dict | None = None,
+                      propensity_kwargs: dict | None = None) -> Estimate:
     """Level 3: doubly robust, cross-fitted.
 
     Estimates the counterfactual mean for delivered units as
@@ -182,13 +190,14 @@ def aipw_cross_fitted(x: np.ndarray, outcome: np.ndarray, assigned: np.ndarray,
     study's premise is that it is unavailable.
     """
     y_t, d_t, mu, e = _cross_fit_nuisances(x, outcome, assigned, delivered, folds, seed,
-                                           boosted_kwargs)
+                                           boosted_kwargs, propensity_kwargs)
     return _aipw_from_nuisances(y_t, d_t, mu, e, normalized=normalized, folds=folds)
 
 
 def aipw_both(x: np.ndarray, outcome: np.ndarray, assigned: np.ndarray,
               delivered: np.ndarray, *, folds: int = 3, seed: int = 0,
-              boosted_kwargs: dict | None = None) -> tuple[Estimate, Estimate]:
+              boosted_kwargs: dict | None = None,
+              propensity_kwargs: dict | None = None) -> tuple[Estimate, Estimate]:
     """Both weight forms from a single cross-fitting pass.
 
     Cross-fitting is the expensive part -- two nuisance models per fold. The two weight
@@ -196,14 +205,21 @@ def aipw_both(x: np.ndarray, outcome: np.ndarray, assigned: np.ndarray,
     cost for nothing. Their difference is the cost of the naive specification, measured.
     """
     y_t, d_t, mu, e = _cross_fit_nuisances(x, outcome, assigned, delivered, folds, seed,
-                                           boosted_kwargs)
+                                           boosted_kwargs, propensity_kwargs)
     return (_aipw_from_nuisances(y_t, d_t, mu, e, normalized=False, folds=folds),
             _aipw_from_nuisances(y_t, d_t, mu, e, normalized=True, folds=folds))
 
 
-def _cross_fit_nuisances(x, outcome, assigned, delivered, folds, seed, boosted_kwargs=None):
-    """Out-of-fold predictions of the outcome and propensity models, within the treated arm."""
-    boosted_kwargs = BOOSTED_KWARGS if boosted_kwargs is None else boosted_kwargs
+def _cross_fit_nuisances(x, outcome, assigned, delivered, folds, seed,
+                         outcome_kwargs=None, propensity_kwargs=None):
+    """Out-of-fold predictions of the outcome and propensity models, within the treated arm.
+
+    The two models take separate configurations. Sharing one forces a single compromise on
+    two incompatible requirements: the outcome model needs accuracy in level, the propensity
+    model needs its predictions bounded away from 1.
+    """
+    outcome_kwargs = OUTCOME_KWARGS if outcome_kwargs is None else outcome_kwargs
+    propensity_kwargs = PROPENSITY_KWARGS if propensity_kwargs is None else propensity_kwargs
     treated = assigned == 1
     x_t, y_t, d_t = x[treated], outcome[treated], delivered[treated]
 
@@ -213,9 +229,9 @@ def _cross_fit_nuisances(x, outcome, assigned, delivered, folds, seed, boosted_k
     splitter = StratifiedKFold(n_splits=folds, shuffle=True, random_state=seed)
     for fit_idx, eval_idx in splitter.split(x_t, d_t):
         undelivered = fit_idx[d_t[fit_idx] == 0]
-        outcome_model = HistGradientBoostingClassifier(**boosted_kwargs).fit(
+        outcome_model = HistGradientBoostingClassifier(**outcome_kwargs).fit(
             x_t[undelivered], y_t[undelivered])
-        propensity_model = HistGradientBoostingClassifier(**boosted_kwargs).fit(
+        propensity_model = HistGradientBoostingClassifier(**propensity_kwargs).fit(
             x_t[fit_idx], d_t[fit_idx])
         mu[eval_idx] = outcome_model.predict_proba(x_t[eval_idx])[:, 1]
         e[eval_idx] = propensity_model.predict_proba(x_t[eval_idx])[:, 1]
