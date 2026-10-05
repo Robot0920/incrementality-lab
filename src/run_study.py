@@ -19,6 +19,9 @@ Two configurations are carried through the whole sweep rather than one:
 so the finding that configuration moves the answer can be checked at every grid point
 instead of resting on a single one.
 
+Reporting lives in src/report_study.py: this module only computes and records
+per-replicate estimates, so a grid can be extended without recomputing what already exists.
+
 Primary outcome is the decision-flip rate, not the bias. With break-even placed at
 `threshold * true_effect`:
 
@@ -69,7 +72,6 @@ THRESHOLDS = [0.25, 0.5, 0.75, 0.9, 1.0, 1.1, 1.25, 1.5]
 
 RESULTS = Path(__file__).resolve().parents[1] / "results"
 RAW = RESULTS / "study_raw.csv"
-FLIP = RESULTS / "flip_curve.csv"
 
 
 def one_replicate(p, folds: int, seed: int) -> list[tuple[str, float, float]]:
@@ -115,13 +117,17 @@ def main() -> None:
     ap.add_argument("--reps", type=int, default=12)
     ap.add_argument("--folds", type=int, default=3)
     ap.add_argument("--seed", type=int, default=20261001)
+    ap.add_argument("--grid", type=float, nargs="*", default=GRID_OBSERVABILITY,
+                    help="observability values to sweep")
+    ap.add_argument("--out", type=Path, default=RAW,
+                    help="where to write per-replicate estimates")
     args = ap.parse_args()
 
     RESULTS.mkdir(exist_ok=True)
     started = time.time()
     raw: list[dict] = []
 
-    for observability in GRID_OBSERVABILITY:
+    for observability in args.grid:
         point_started = time.time()
         for r in range(args.reps):
             seed = args.seed + int(observability * 1000) + r
@@ -132,67 +138,14 @@ def main() -> None:
         print(f"  observability {observability:.2f} done in "
               f"{time.time() - point_started:.0f}s", flush=True)
 
-    with RAW.open("w", newline="") as fh:
+    with args.out.open("w", newline="") as fh:
         writer = csv.DictWriter(fh, fieldnames=["observability", "replicate", "estimator",
                                                 "estimate", "truth"])
         writer.writeheader()
         writer.writerows(raw)
-    print(f"\nwrote {len(raw):,} rows to {RAW}")
+    print(f"\nwrote {len(raw):,} rows to {args.out}")
 
-    estimators = list(dict.fromkeys(row["estimator"] for row in raw))
-
-    def series(method: str, observability: float) -> tuple[np.ndarray, float]:
-        rows = [r for r in raw if r["estimator"] == method
-                and r["observability"] == observability]
-        return np.array([r["estimate"] for r in rows]), rows[0]["truth"]
-
-    # ---- relative bias across the grid -------------------------------------------
-    print(f"\n{'=' * 92}\nrelative bias, by observability\n{'=' * 92}")
-    header = "".join(f"{o:>14.2f}" for o in GRID_OBSERVABILITY)
-    print(f"{'estimator':<34}{header}")
-    print("-" * 92)
-    for method in estimators:
-        cells = []
-        for observability in GRID_OBSERVABILITY:
-            estimates, truth = series(method, observability)
-            cells.append(f"{estimates.mean() / truth - 1:>+13.1%} ")
-        print(f"{method:<34}{''.join(cells)}")
-
-    # ---- decision-flip curve -----------------------------------------------------
-    with FLIP.open("w", newline="") as fh:
-        writer = csv.writer(fh)
-        writer.writerow(["observability", "estimator", "threshold", "flip_rate"])
-        for observability in GRID_OBSERVABILITY:
-            for method in estimators:
-                estimates, truth = series(method, observability)
-                for threshold in THRESHOLDS:
-                    writer.writerow([observability, method, threshold,
-                                     flip_rate(estimates, truth, threshold)])
-    print(f"wrote the flip curve to {FLIP}")
-
-    print(f"\n{'=' * 92}\ndecision-flip rate at threshold 1.25 "
-          f"(decline is correct; a flip means shipping anyway)\n{'=' * 92}")
-    print(f"{'estimator':<34}{header}")
-    print("-" * 92)
-    for method in estimators:
-        cells = []
-        for observability in GRID_OBSERVABILITY:
-            estimates, truth = series(method, observability)
-            cells.append(f"{flip_rate(estimates, truth, 1.25):>13.0%} ")
-        print(f"{method:<34}{''.join(cells)}")
-
-    print(f"\n{'=' * 92}\ndecision-flip rate at threshold 0.5 "
-          f"(ship is correct; a flip means declining anyway)\n{'=' * 92}")
-    print(f"{'estimator':<34}{header}")
-    print("-" * 92)
-    for method in estimators:
-        cells = []
-        for observability in GRID_OBSERVABILITY:
-            estimates, truth = series(method, observability)
-            cells.append(f"{flip_rate(estimates, truth, 0.5):>13.0%} ")
-        print(f"{method:<34}{''.join(cells)}")
-
-    print(f"\ntotal elapsed {time.time() - started:.0f}s\n")
+    print(f"total elapsed {time.time() - started:.0f}s\n")
 
 
 if __name__ == "__main__":
