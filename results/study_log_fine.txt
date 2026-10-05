@@ -1,0 +1,8 @@
+  observability 0.80 done in 175s
+  observability 0.85 done in 171s
+  observability 0.90 done in 172s
+  observability 0.95 done in 175s
+
+wrote 576 rows to results/study_raw_fine.csv
+total elapsed 693s
+

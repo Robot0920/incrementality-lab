@@ -3,8 +3,9 @@
 The study's result. `docs/05_findings_estimation.md` reports the endpoint where the
 confounder is fully observed; this document reports the sweep.
 
-Setup: `observability` over 1.00, 0.75, 0.50, 0.25, 0.00; `n = 600,000`; 12 replicates per
-grid point; 3 cross-fitting folds; 1,020 model fits in 911 seconds. Two configurations
+Setup: `observability` over 1.00, 0.95, 0.90, 0.85, 0.80, 0.75, 0.50, 0.25, 0.00;
+`n = 600,000`; 12 replicates per grid point; 3 cross-fitting folds; 1,836 model fits in
+1,604 seconds across two runs. Two configurations
 carried throughout — `def` is scikit-learn's defaults, `sel` is chosen by held-out log-loss
 without consulting the truth. Reproduce with `python -m src.run_study`. Per-replicate
 estimates are in `results/study_raw.csv`.
@@ -53,18 +54,30 @@ This is the point that is easy to assert and hard to believe until measured: a d
 robust, cross-fitted estimator is not robust to the thing that actually breaks these
 studies.
 
-## 3. The degradation is not graceful
+## 3. The degradation is a curve, and its steepest section is at the top
 
-```
-observability  1.00 -> 0.75    best modelled estimator:  +9.4%  ->  +42.1%
-```
+`observability` is literally the fraction of the confounder's variance the covariates
+capture: the observed covariate is `sqrt(obs) * A + sqrt(1-obs) * noise`, so `obs` is the
+R-squared of the confounder on the covariate.
 
-**Losing a quarter of the confounder's variance costs roughly 32 points of bias.** By
-`observability = 0.50` the bias is +54%, already 83% of the way to the fully-unobserved
-value. The curve is almost all of its height in the first quarter of the range.
+| observability | bias | 95% interval | cost of the previous 0.05 |
+|---|---|---|---|
+| 1.00 | +9.4% | [+6.4%, +12.4%] | |
+| 0.95 | +18.6% | [+15.2%, +22.1%] | **+9.2 pp** |
+| 0.90 | +26.9% | [+24.7%, +29.0%] | +8.3 pp |
+| 0.85 | +31.8% | [+29.2%, +34.4%] | +4.9 pp |
+| 0.80 | +37.0% | [+35.4%, +38.6%] | +5.2 pp |
+| 0.75 | +42.1% | [+40.0%, +44.2%] | +5.1 pp |
+| 0.50 | +53.6% | [+49.8%, +57.4%] | +2.3 pp |
+| 0.25 | +62.2% | [+59.7%, +64.8%] | +1.7 pp |
+| 0.00 | +67.2% | [+64.5%, +69.8%] | +1.0 pp |
 
-Operationally: covariate coverage has to be close to perfect before a modelled
-counterfactual is worth anything. Nearly-good is not good.
+Losing the **first** 5% of the confounder's variance costs 9 points of bias; losing the
+last 25% costs 5. The marginal value of covariate coverage is highest exactly where
+coverage is hardest to obtain, and the intervals are narrow enough that this is not
+replicate noise.
+
+Operationally: nearly-complete coverage is not nearly-adequate.
 
 ## 4. Estimator choice matters only where identification holds
 
@@ -106,6 +119,25 @@ That asymmetry matters for how the failure presents itself in a business. There 
 missed-opportunity signal to alert anyone. The only symptom is sustained spending on
 campaigns that do not work, with a dashboard that says they do.
 
+## 5b. Predictive quality and causal accuracy are not reliably related
+
+| flip rate at threshold 1.25 | 0.90 | 0.85 |
+|---|---|---|
+| level 2, boosted `@def` (saturating; rejected by log-loss) | 33% | 75% |
+| level 2, boosted `@sel` (selected by log-loss) | 100% | 100% |
+
+The configuration that held-out log-loss **rejected** produces the **less** biased causal
+estimate through the realistic middle of the range. Its saturation inflates the
+counterfactual mean, which pushes the estimated lift down and partially cancels the upward
+confounding bias.
+
+The tempting reading is wrong. This is not evidence that worse models give better causal
+estimates. It is evidence that **the sign of the relationship between predictive quality
+and causal accuracy is unreliable**: here two errors cancelled, and in another
+data-generating process they would compound. The usable conclusion is that predictive loss
+cannot be used to tune toward a better causal estimate, and that there is no way to tell
+which direction tuning moved you -- checking would require the answer you do not have.
+
 ## 6. The pre-registered decision
 
 `docs/03_study_design.md`, fixed before any of this was run:
@@ -140,9 +172,10 @@ modelled pipeline can be trusted for the periods between holdouts.
 |---|---|
 | ITT and LATE are unbiased regardless of covariate quality | that these magnitudes transfer to the reference dataset — the simulator is calibrated to its moments, not validated against its effects |
 | Modelled counterfactuals converge on the naive comparison as observability falls | anything about **time-series** counterfactuals: synthetic control, interrupted time series, pre/post. This study tests the **cross-sectional** family only |
-| Degradation is steep and front-loaded in the first quarter of the range | the shape between 0.75 and 1.00, where the collapse happens; the grid has no points there |
+| Degradation is a curve steepest at the top: the first 5% of lost coverage costs 9 points of bias | behaviour above 0.95, where the 5% bar is finally cleared; the grid's top interval is still 0.05 wide |
 | The error is one-directional, inflating lift, never deflating it | whether a selection criterion aligned to the estimand narrows the gap at high observability |
 
-The gap between 0.75 and 1.00 is the one place the grid is too coarse to describe what it
-has found, and it is exactly the region a business would care about. That is the obvious
-next refinement.
+The remaining coarseness is between 0.95 and 1.00, where the pre-registered bar flips from
+failed to cleared. Refining it further would sharpen the stated requirement from "more than
+95%" to a specific figure, but the practical conclusion is already insensitive to it: no
+observational dataset of this kind reaches 95%.
