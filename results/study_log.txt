@@ -1,0 +1,65 @@
+  observability 1.00 done in 188s
+  observability 0.75 done in 187s
+  observability 0.50 done in 184s
+  observability 0.25 done in 181s
+  observability 0.00 done in 171s
+
+wrote 720 rows to /Users/duanduan/revenue-engine/results/study_raw.csv
+
+============================================================================================
+relative bias, by observability
+============================================================================================
+estimator                                   1.00          0.75          0.50          0.25          0.00
+--------------------------------------------------------------------------------------------
+naive_delivered_vs_control               +62.6%        +63.2%        +61.3%        +63.6%        +64.9% 
+itt                                       -4.5%         -1.7%         +2.5%         +2.2%         +4.5% 
+late                                      -4.3%         -1.9%         +1.9%         +2.0%         +3.0% 
+level1_logistic                          +13.8%        +41.9%        +54.0%        +62.4%        +67.1% 
+level2_boosted@def                        +6.8%        +37.8%        +49.9%        +58.5%        +62.5% 
+level2_boosted_calibrated@def            +55.5%        +60.3%        +60.4%        +64.7%        +67.2% 
+level3_aipw_plain@def                    +53.7%        +42.2%        +53.7%        +62.2%        +67.7% 
+level3_aipw_hajek@def                    +12.0%        +42.0%        +53.7%        +62.2%        +67.7% 
+level2_boosted@sel                       +19.5%        +44.2%        +54.2%        +62.4%        +67.2% 
+level2_boosted_calibrated@sel            +26.3%        +48.5%        +56.7%        +63.7%        +67.2% 
+level3_aipw_plain@sel                     +9.4%        +42.1%        +53.6%        +62.2%        +67.2% 
+level3_aipw_hajek@sel                     +9.4%        +42.1%        +53.6%        +62.2%        +67.2% 
+wrote the flip curve to /Users/duanduan/revenue-engine/results/flip_curve.csv
+
+============================================================================================
+decision-flip rate at threshold 1.25 (decline is correct; a flip means shipping anyway)
+============================================================================================
+estimator                                   1.00          0.75          0.50          0.25          0.00
+--------------------------------------------------------------------------------------------
+naive_delivered_vs_control                 100%          100%          100%          100%          100% 
+itt                                          8%            0%            8%            8%            0% 
+late                                         8%            0%            8%            8%            0% 
+level1_logistic                              0%          100%          100%          100%          100% 
+level2_boosted@def                           0%          100%          100%          100%          100% 
+level2_boosted_calibrated@def              100%          100%          100%          100%          100% 
+level3_aipw_plain@def                       17%          100%          100%          100%          100% 
+level3_aipw_hajek@def                        8%          100%          100%          100%          100% 
+level2_boosted@sel                          17%          100%          100%          100%          100% 
+level2_boosted_calibrated@sel               67%          100%          100%          100%          100% 
+level3_aipw_plain@sel                        0%          100%          100%          100%          100% 
+level3_aipw_hajek@sel                        0%          100%          100%          100%          100% 
+
+============================================================================================
+decision-flip rate at threshold 0.5 (ship is correct; a flip means declining anyway)
+============================================================================================
+estimator                                   1.00          0.75          0.50          0.25          0.00
+--------------------------------------------------------------------------------------------
+naive_delivered_vs_control                   0%            0%            0%            0%            0% 
+itt                                          0%            0%            0%            0%            0% 
+late                                         0%            0%            0%            0%            0% 
+level1_logistic                              0%            0%            0%            0%            0% 
+level2_boosted@def                           0%            0%            0%            0%            0% 
+level2_boosted_calibrated@def                0%            0%            0%            0%            0% 
+level3_aipw_plain@def                        0%            0%            0%            0%            0% 
+level3_aipw_hajek@def                        0%            0%            0%            0%            0% 
+level2_boosted@sel                           0%            0%            0%            0%            0% 
+level2_boosted_calibrated@sel                0%            0%            0%            0%            0% 
+level3_aipw_plain@sel                        0%            0%            0%            0%            0% 
+level3_aipw_hajek@sel                        0%            0%            0%            0%            0% 
+
+total elapsed 911s
+

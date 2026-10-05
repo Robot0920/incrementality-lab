@@ -58,6 +58,10 @@ All figures produced by the commands in Section 4, from the raw file, reproducib
 | **Inspecting a fixed-horizon test 30 times raises its false-positive rate from 5% to 33%** | 5.60% -> 33.37% (3,000 simulations) | [`src/validate_intervals.py`](src/validate_intervals.py) |
 | The anytime-valid interval holds its error rate under the same 30 inspections | 1.23% (<= 5%), coverage 99.8% | [`src/validate_intervals.py`](src/validate_intervals.py) |
 | Price of being allowed to look whenever you like | interval 1.55x wider | [`src/validate_intervals.py`](src/validate_intervals.py) |
+| **With the confounder unobserved, every modelled counterfactual converges on the naive comparison** | +62.5% to +67.7% against the naive +64.9% | [`docs/06_findings_identification.md`](docs/06_findings_identification.md) |
+| **Losing a quarter of the confounder's variance costs ~32 points of bias** | +9.4% → +42.1% from observability 1.00 → 0.75 | [`src/run_study.py`](src/run_study.py) |
+| **Every modelled estimator recommends shipping a sub-break-even campaign, 12 of 12 replicates, at every grid point below full observability** | flip rate 100% vs ITT's 0–8% | [`results/flip_curve.csv`](results/flip_curve.csv) |
+| ITT and LATE stay unbiased regardless of covariate quality | within ±4.5% across the whole sweep | [`src/run_study.py`](src/run_study.py) |
 
 The bias is established two independent ways — `ITT / compliance` and a mixture identity
 that recovers the reached users' hidden baseline — and the two agree to three decimals.
@@ -80,6 +84,8 @@ docs/
                                data characteristics and operational limits
   05_findings_estimation.md    interim result: estimation error with the confounder
                                fully observed, and how far hyperparameters move it
+  06_findings_identification.md  the study's result: what happens as the confounder
+                               becomes unobservable, and the holdout decision
 
 sql/
   01_design_audit.sql          allocation, delivery rate, base rates
@@ -96,6 +102,8 @@ src/
   intervals.py                 fixed-horizon and anytime-valid intervals
   validate_intervals.py        measures what those intervals actually do
   simulate.py                  calibrated data-generating process with a known effect
+  select_hyperparameters.py    picks regularisation by held-out log-loss, never by truth
+  run_study.py                 the sweep over observability; writes results/
   estimators.py                the estimator ladder: ITT, LATE, and three modelled levels
   validate_estimators.py       grades every estimator against a known answer
   ingest/criteo_uplift.py      download, load to bronze, assert the row count
@@ -109,6 +117,7 @@ scripts/
 dq/
   criteo_uplift.dqdl           data-quality rules, including the identifying assumptions
 
+results/                       per-replicate estimates and the decision-flip curve
 data/                          git-ignored; everything lives in data/incrementality.duckdb
 ```
 
